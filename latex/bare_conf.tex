@@ -159,13 +159,13 @@
 
 % *** MATH PACKAGES ***
 %
-%\usepackage{amsmath}
+\usepackage{amsmath}
 % A popular package from the American Mathematical Society that provides
 % many useful and powerful commands for dealing with mathematics.
 %
 % Note that the amsmath package sets \interdisplaylinepenalty to 10000
 % thus preventing page breaks from occurring within multiline equations. Use:
-%\interdisplaylinepenalty=2500
+\interdisplaylinepenalty=2500
 % after loading amsmath to restore such page breaks as IEEEtran.cls normally
 % does. amsmath.sty is already installed on most LaTeX systems. The latest
 % version and documentation can be obtained at:
@@ -274,7 +274,7 @@
 % http://www.ctan.org/pkg/stfloats
 % Do not use the stfloats baselinefloat ability as the IEEE does not allow
 % \baselineskip to stretch. Authors submitting work to the IEEE should note
-% that the IEEE rarely uses double column equations and that authors should try
+% that the IEEE rarely uses double column  and that authors should try
 % to avoid such use. Do not be tempted to use the cuted.sty or midfloat.sty
 % packages (also by Sigitas Tolusis) as the IEEE does not format its papers in
 % such ways.
@@ -398,6 +398,14 @@ The abstract goes here.
 % creates the second title. It will be ignored for other modes.
 \IEEEpeerreviewmaketitle
 
+\section{Methodology}
+\subsection{Probability}
+To get an estimation of the actual pose $\widehat{s_t}$ we search for the maximum likelihood of the actual measurement $z_t$ under incorporation of the actual pose $x_t$ and the map data $m$ as follows:
+
+\begin{equation}
+	\label{equ:maximum}
+	\widehat{s_t} = \max_{x_t} p \left (  z_t|x_t,m \right ).
+\end{equation}
 
 
 \section{Introduction}
