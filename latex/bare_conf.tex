@@ -433,21 +433,37 @@ f_{prob}(z^i_t, x_t) \sim p \left ( z^i_t|x_t,m \right )
 	\widehat{x_t} = \max_{x_t} \prod_i f_{prob}(z^i_t, x_t).
 \end{equation}
 
-So determining the actual pose results in maximizing over all positions (see equation~\ref{equ:withfunction}). Iterating over the three dimensional space of the robots position would lead to unacceptable high computational costs. So a randomized approach with $x_{t-1}$ as initial hint is used. The approach is called Random Normal Matching (RNM) and described in the following section.
+So determining the actual pose results in maximizing over all positions (see equation~\ref{equ:withfunction}). Iterating over the three dimensional space of the robots position would lead to unacceptable high computational costs. So a randomized approach with $x_{t-1}$ as initial hint is used. The approach is called Random Normal Matching (RNM) and described in the following section. \todo{rand function} \todo{+ - span ueberlauf} \todo{getTrafo - thing with normals} \todo{access of m and s returns a pose because of saving normals} \todo{transformation multiply?} \todo{getPose}
 
 \subsection{Random Normal Matching}
 \begin{algorithm}
-	\caption{Euclid’s algorithm}\label{euclid}
+	\caption{Random Normal Matching}\label{euclid}
 	\begin{algorithmic}[1]
-		\Procedure{Euclid}{$a,b$}\Comment{The g.c.d. of a and b}
-		\State $r\gets a\bmod b$
-		\While{$r\not=0$}\Comment{We have the answer if r is 0}
-		\State $a\gets b$
-		\State $b\gets r$
-		\State $r\gets a\bmod b$
-		\EndWhile\label{euclidendwhile}
-		\State \textbf{return} $b$\Comment{The gcd is b}
-		\EndProcedure
+		\Function{$f_{RNM}$}{$M$, $S$, $trials$, $span$, $x_{t-1}$}
+			\State $S \gets subsample(S)$
+			\State $C \gets extractControlSet(S)$
+			\State $N_S \gets calculateNormals(S)$
+			\State $N_M \gets calculateNormals(C)$
+			\State $bestProb \gets 0.0$
+			\ForAll{$trials$}
+				\State $idx_{rand} \gets rand()$
+				\State $pose1 \gets getPose(M[idx_{rand}], N_M)$
+				\State $idx_{min} \gets idx_{rand} - span$
+				\State $idx_{max} \gets idx_{rand} + span$
+				\For{$i\gets idx_{min}, idx_{max}$}
+					\State $pose2 \gets getPose(S[idx_{rand}], N_S)$
+					\State $T \gets getTransformation(pose1, pose2)$
+					\State $T_{map} \gets x_{t-1} \cdot T$
+					\State $C^* = T_{map} \cdot C $ \Comment Transform scan into map
+					\State $prob = rating(C^*)$ \Comment rating function
+					\If{$prob > bestProb$}
+						\State $T_{best} = T$
+						\State $bestProb = prob$
+					\EndIf
+				\EndFor
+			\EndFor
+			\State \Return $T_{best}$
+		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
 \section{Introduction}
