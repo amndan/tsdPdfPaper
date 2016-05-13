@@ -178,6 +178,8 @@
 % *** SPECIALIZED LIST PACKAGES ***
 %
 %\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 % algorithmic.sty was written by Peter Williams and Rogerio Brito.
 % This package provides an algorithmic environment fo describing algorithms.
 % You can use the algorithmic environment in-text or within a figure
@@ -311,6 +313,10 @@
 % correct bad hyphenation here
 \hyphenation{op-tical net-works semi-conduc-tor}
 
+% *** PDF, URL AND HYPERLINK PACKAGES ***
+%
+\usepackage[textsize=tiny]{todonotes}
+\presetkeys{todonotes}{fancyline}{}
 
 \begin{document}
 %
@@ -385,9 +391,6 @@ The abstract goes here.
 
 % no keywords
 
-
-
-
 % For peer review papers, you can put extra information on the cover
 % page as needed:
 % \ifCLASSOPTIONpeerreview
@@ -399,15 +402,54 @@ The abstract goes here.
 \IEEEpeerreviewmaketitle
 
 \section{Methodology}
-\subsection{Probability}
-To get an estimation of the actual pose $\widehat{s_t}$ we search for the maximum likelihood of the actual measurement $z_t$ under incorporation of the actual pose $x_t$ and the map data $m$ as follows:
+\subsection{PDF}
+To get an estimation of the actual pose $\widehat{x_t}$ we search for the maximum likelihood of the actual measurement $z_t$ under incorporation of the actual pose $x_t$ and the map data $m$ as follows\todo{ref}:
 
 \begin{equation}
 	\label{equ:maximum}
-	\widehat{s_t} = \max_{x_t} p \left (  z_t|x_t,m \right ).
+	\widehat{x_t} = \max_{x_t} p \left (  z_t|x_t,m \right ).
 \end{equation}
 
+The measurement $z_t$ is represented as actual laser scan data. Each scan consists of $n$ multiple range measurements $z^i_t$. Assuming \todo{ref}that scan rays are statistically independent from each other, equation~\ref{equ:maximum} can be denoted as:
 
+\begin{equation}
+	\label{equ:multiply}
+	\widehat{x_t} = \max_{x_t} \prod_i p \left ( z^i_t|x_t,m \right ).
+\end{equation}
+
+Evaluating the probability for a given range measurement $z^i_t$ under a given position $x_t$ and the map $m$ a probability field can be used\todo{ref, picture prob map}. The probability field provides the likelihood for a single ray to impinge at a given Position in the map.
+
+Using $x_t$, $z^i_t$ can be projected into the map coordinates to obtain a position ($x_{z^i_t}, y_{z^i_t}$) from the single range measurement. Looking up the probability field value at this position leads to the probability for the single range measurement. The process of determining the probability for a single range measurement with a probability field is titled as $f_{prob}(z^i_t, x_t)$.
+
+\begin{equation}
+\label{equ:connection}
+f_{prob}(z^i_t, x_t) \sim p \left ( z^i_t|x_t,m \right )
+\end{equation}
+
+\noindent Assuming equation~\ref{equ:connection}, equation~\ref{equ:multiply} can be rewritten as:
+
+\begin{equation}
+\label{equ:withfunction}
+	\widehat{x_t} = \max_{x_t} \prod_i f_{prob}(z^i_t, x_t).
+\end{equation}
+
+So determining the actual pose results in maximizing over all positions (see equation~\ref{equ:withfunction}). Iterating over the three dimensional space of the robots position would lead to unacceptable high computational costs. So a randomized approach with $x_{t-1}$ as initial hint is used. The approach is called Random Normal Matching (RNM) and described in the following section.
+
+\subsection{Random Normal Matching}
+\begin{algorithm}
+	\caption{Euclid’s algorithm}\label{euclid}
+	\begin{algorithmic}[1]
+		\Procedure{Euclid}{$a,b$}\Comment{The g.c.d. of a and b}
+		\State $r\gets a\bmod b$
+		\While{$r\not=0$}\Comment{We have the answer if r is 0}
+		\State $a\gets b$
+		\State $b\gets r$
+		\State $r\gets a\bmod b$
+		\EndWhile\label{euclidendwhile}
+		\State \textbf{return} $b$\Comment{The gcd is b}
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
 \section{Introduction}
 % no \IEEEPARstart
 This demo file is intended to serve as a ``starter file''
