@@ -403,7 +403,7 @@ The abstract goes here.
 
 \section{Methodology}
 \subsection{PDF}
-To get an estimation of the actual pose $\widehat{x_t}$ we search for the maximum likelihood of the actual measurement $z_t$ under incorporation of the actual pose $x_t$ and the map data $m$ as follows\todo{ref}:
+To get an estimation of the actual pose $\widehat{x_t}$ \todo{describe pose notation} we search for the maximum likelihood of the actual measurement $z_t$ under incorporation of the actual pose $x_t$ and the map data $m$ as follows\todo{ref}:
 
 \begin{equation}
 	\label{equ:maximum}
@@ -433,7 +433,7 @@ f_{prob}(z^i_t, x_t) \sim p \left ( z^i_t|x_t,m \right )
 	\widehat{x_t} = \max_{x_t} \prod_i f_{prob}(z^i_t, x_t).
 \end{equation}
 
-So determining the actual pose results in maximizing over all positions (see equation~\ref{equ:withfunction}). Iterating over the three dimensional space of the robots position would lead to unacceptable high computational costs. So a randomized approach with $x_{t-1}$ as initial hint is used. The approach is called Random Normal Matching (RNM) and described in the following section. \todo{rand function} \todo{+ - span ueberlauf} \todo{getTrafo - thing with normals} \todo{access of m and s returns a pose because of saving normals} \todo{transformation multiply?} \todo{getPose}
+So determining the actual pose results in maximizing over all positions (see equation~\ref{equ:withfunction}). Iterating over the three dimensional space of the robots position would lead to unacceptable high computational costs. So a randomized approach with $x_{t-1}$ as initial hint is used. The approach is called Random Normal Matching (RNM) and described in the following section. \todo{rand function} \todo{+ - span ueberlauf} \todo{getTrafo - thing with normals} \todo{access of m and s returns a pose because of saving normals} \todo{transformation multiply?} \todo{getPose} \todo{T multiply with xt-1 is not possible; need xt-1 a frame not a pose}
 
 \subsection{Random Normal Matching}
 \begin{algorithm}
