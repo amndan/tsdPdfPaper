@@ -402,6 +402,22 @@ The abstract goes here.
 \IEEEpeerreviewmaketitle
 
 \section{Methodology}
+
+\subsection{SLAM}
+In general we use our existing 2D-SLAM algorithm described in \cite{Koch2015} and \cite{May2014}\todo{open source, name, link}. The approach is based on the truncated signed distance function (TSDF) \todo{ref}. For the readers convenience and to classify the work of this publication the general structure of the algorithm follows. Primary, the approach consists of four steps: 
+\begin{itemize}
+	\item Reconstruction
+	\item Registration
+	\item Data Integration
+	\item Grid Extraction
+\end{itemize}
+If new laser scanner data \todo{mention laser scanners in the beginning} arrives these steps are triggered one after another. The reconstruction step serves for extracting synthetic laser scan data from the actual map at the last known position. Doing so enables to get a sum of information from all scans so far.\todo{anders schreiben} This is done by raycasting through TSD space as described in \cite{May2014}. Registration means matching the scan data from the reconstruction step and the newly arrived scan data. This Publication describes an efficient and accurate method for this registration step. After the registration the relative pose change of the two scans is determined and the robots absolute pose can be updated. With this information the new scan data can be integrated into the map representation (data integration step). Finally, the map represented as TSDFs gets converted to a more user-friendly occupancy grid map in the grid extraction step. \cite{May2014}
+
+\subsection{Registration}
+The registration of two consecutive laser scans means extracting the relative displacement of the two scans. A widely used approach for that is to use the ICP\todo{cite} algorithm. This performs well if the displacement between two scans is small. E.g. small scan rates or high movement speeds can lead to greater displacements than the ICP algorithm can handle. Reason for that is the ICPs tendency to run into local minima. 
+
+To overcome the restriction of small displacements between two consecutive scans, a registration method called Random Normal Matching is introduced with this publication.
+
 \subsection{PDF}
 To get an estimation of the actual pose $\widehat{x_t}$ \todo{describe pose notation} we search for the maximum likelihood of the actual measurement $z_t$ under incorporation of the actual pose $x_t$ and the map data $m$ as follows\todo{ref}:
 
