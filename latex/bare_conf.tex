@@ -116,12 +116,12 @@
 % *** GRAPHICS RELATED PACKAGES ***
 %
 \ifCLASSINFOpdf
-  % \usepackage[pdftex]{graphicx}
+   \usepackage[pdftex]{graphicx}
   % declare the path(s) where your graphic files are
-  % \graphicspath{{../pdf/}{../jpeg/}}
+   \graphicspath{{images/}}
   % and their extensions so you won't have to specify these with
   % every instance of \includegraphics
-  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+   \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
 \else
   % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
   % will default to the driver specified in the system graphics.cfg if no
@@ -316,10 +316,11 @@
 % *** PDF, URL AND HYPERLINK PACKAGES ***
 %
 \usepackage[textsize=tiny]{todonotes}
-\usepackage{tikz}
 \presetkeys{todonotes}{fancyline}{}
 
+
 \begin{document}
+	
 %
 % paper title
 % Titles are generally capitalized except for words such as a, an, and, as,
@@ -418,7 +419,16 @@ If new laser scanner data \todo{mention laser scanners in the beginning} arrives
 \subsection{Registration}
 The registration of two consecutive laser scans means extracting the relative displacement of the two scans. A widely used approach for that is to use the ICP\todo{cite} algorithm. This performs well if the displacement between two scans is small. E.g. small scan rates or high movement speeds can lead to greater displacements than the ICP algorithm can handle. Reason for that is the ICPs tendency to run into local minima. 
 
-To overcome the restriction of small displacements between two consecutive scans, a registration method called Random Normal Matching is introduced with this publication.
+To overcome the restriction of small displacements between two consecutive scans, a registration method called Random Normal Matching (RNM) is introduced with this publication.
+
+\subsection{RNM}
+RNM tries to find a rude initial transformation, called pre-transformation in the following, between two consecutive laser scans. This pre-transformation limits the displacements between the scans for the subsequent ICP step.
+
+The use of the TSD representation allows an easy extraction of the scans normals during reconstruction step\todo{normals from tsd --> kinect fusion}. Additionally calculating the actual scans normals with \todo{algorithm for normal of scene} enables us to match the two scans, taking only the information of two scan points and their normals into account\todo{figure on that}. Let $M_n$ and $S_n$ be the models and scenes scan points at index n projected into 2D space. Each element of $M_n$ and $S_n$ therefore consists of a $x_n$ and a $y_n$ coordinate in 2D space. Further there is information about the normal of each scan point denoted as $NM_n$ for the models normals and $NS_n$ for the scenes normals. Each element of $NM$ and $NS$ consists of an angle $\phi_n$ representing the direction of the normal. 
+
+Based on respectively two points in model and scene scan a pre-transformation can be computed with the above method.
+
+We transform the whole scans into 2D space so that the position and normals of two selected scan points match.\todo{evtl picture}
 
 \subsection{PDF}
 To get an estimation of the actual pose $\widehat{x_t}$ \todo{describe pose notation} we search for the maximum likelihood of the actual measurement $z_t$ under incorporation of the actual pose $x_t$ and the map data $m$ as follows\todo{ref}:
@@ -485,49 +495,11 @@ So determining the actual pose results in maximizing over all positions (see equ
 	\end{algorithmic}
 \end{algorithm}
 
-\begin{figure}
-	\begin{tikzpicture}
-	\pgfmathsetmacro{\ah}{0.35}%
-	\pgfmathsetmacro{\aw}{0.3}%
-	\pgfmathsetmacro{\ac}{20}%
-	\pgfmathsetmacro{\ir}{8}%
-	\pgfmathsetmacro{\sp}{4}%
-	
-
-	\begin{scope}[shift={(0,1)}]
-	\draw (0,0) -- (\aw*\ac,0);
-	\draw (0,\ah) -- (\aw*\ac,\ah);
-	\foreach \x in {0,1,...,\ac}
-	{
-		\draw (\x*\aw cm,0) -- (\x*\aw cm,\ah);
-	}
-	\node [] (txtModel) at (0,\ah/2) [] {};
-	\draw [fill=yellow] (\aw*\ir,0) rectangle (\aw*\ir+\aw,\ah);
-	\end{scope}
-
-	\begin{scope}[shift={(0,0)}]
-		\draw (0,0) -- (\aw*\ac,0);
-		\draw (0,\ah) -- (\aw*\ac,\ah);
-		\foreach \x in {0,1,...,\ac}
-		{
-			\draw (\x*\aw cm,0) -- (\x*\aw cm,\ah);
-		}
-		\node [] (txtSzene) at (0,\ah/2) [] {};		
-		
-		\draw [fill=yellow] (\aw*\ir,0) rectangle (\aw*\ir+\aw,\ah);
-		
-	\end{scope}
-	
-	
-	
-	\node [label={[label distance=0.1cm]180:Model}] at (txtModel) {};
-	\node [label={[label distance=0.1cm]180:Szene}] at (txtSzene) {};
-		
-
-	\end{tikzpicture}
-	\caption{Do not forget!
-		Make it explicit enough that readers
-		can figure out what you are doing.}
+\begin{figure}[htb] 
+	\centering 
+	\def\svgwidth{200pt} 
+	\input{images/array.pdf_tex} 
+	\caption{The Bars represent the model and scene scan arrays. Selecting a random index ($idx_{rnd}$) leads to one model array index and $2\times span + 1$ scene array indexes with range of $[idx_{min}; idx_{max}]$. For every combination of the selected model array index with each selected scene array index a pre-transformation gets computed.} 
 \end{figure}
 
 \section{Introduction}
