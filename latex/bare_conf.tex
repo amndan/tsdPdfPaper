@@ -316,6 +316,7 @@
 % *** PDF, URL AND HYPERLINK PACKAGES ***
 %
 \usepackage[textsize=tiny]{todonotes}
+\usepackage{tikz}
 \presetkeys{todonotes}{fancyline}{}
 
 \begin{document}
@@ -483,6 +484,52 @@ So determining the actual pose results in maximizing over all positions (see equ
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
+
+\begin{figure}
+	\begin{tikzpicture}
+	\pgfmathsetmacro{\ah}{0.35}%
+	\pgfmathsetmacro{\aw}{0.3}%
+	\pgfmathsetmacro{\ac}{20}%
+	\pgfmathsetmacro{\ir}{8}%
+	\pgfmathsetmacro{\sp}{4}%
+	
+
+	\begin{scope}[shift={(0,1)}]
+	\draw (0,0) -- (\aw*\ac,0);
+	\draw (0,\ah) -- (\aw*\ac,\ah);
+	\foreach \x in {0,1,...,\ac}
+	{
+		\draw (\x*\aw cm,0) -- (\x*\aw cm,\ah);
+	}
+	\node [] (txtModel) at (0,\ah/2) [] {};
+	\draw [fill=yellow] (\aw*\ir,0) rectangle (\aw*\ir+\aw,\ah);
+	\end{scope}
+
+	\begin{scope}[shift={(0,0)}]
+		\draw (0,0) -- (\aw*\ac,0);
+		\draw (0,\ah) -- (\aw*\ac,\ah);
+		\foreach \x in {0,1,...,\ac}
+		{
+			\draw (\x*\aw cm,0) -- (\x*\aw cm,\ah);
+		}
+		\node [] (txtSzene) at (0,\ah/2) [] {};		
+		
+		\draw [fill=yellow] (\aw*\ir,0) rectangle (\aw*\ir+\aw,\ah);
+		
+	\end{scope}
+	
+	
+	
+	\node [label={[label distance=0.1cm]180:Model}] at (txtModel) {};
+	\node [label={[label distance=0.1cm]180:Szene}] at (txtSzene) {};
+		
+
+	\end{tikzpicture}
+	\caption{Do not forget!
+		Make it explicit enough that readers
+		can figure out what you are doing.}
+\end{figure}
+
 \section{Introduction}
 % no \IEEEPARstart
 This demo file is intended to serve as a ``starter file''
