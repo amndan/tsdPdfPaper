@@ -422,13 +422,48 @@ The registration of two consecutive laser scans means extracting the relative di
 To overcome the restriction of small displacements between two consecutive scans, a registration method called Random Normal Matching (RNM) is introduced with this publication.
 
 \subsection{RNM}
-RNM tries to find a rude initial transformation, called pre-transformation in the following, between two consecutive laser scans. This pre-transformation limits the displacements between the scans for the subsequent ICP step.
+RNM tries to find a rude initial transformation between two consecutive laser scans. This transformation limits the displacements between the scans for the subsequent ICP step.
 
-The use of the TSD representation allows an easy extraction of the scans normals during reconstruction step\todo{normals from tsd --> kinect fusion}. Additionally calculating the actual scans normals with \todo{algorithm for normal of scene} enables us to match the two scans, taking only the information of two scan points and their normals into account\todo{figure on that}. Let $M_n$ and $S_n$ be the models and scenes scan points at index n projected into 2D space. Each element of $M_n$ and $S_n$ therefore consists of a $x_n$ and a $y_n$ coordinate in 2D space. Further there is information about the normal of each scan point denoted as $NM_n$ for the models normals and $NS_n$ for the scenes normals. Each element of $NM$ and $NS$ consists of an angle $\phi_n$ representing the direction of the normal. 
+Let $M$ and $S$ be the pointclouds to be matched for registration step. Model points ($M$) occur from reconstruction step (raycasting) and scene scan points ($S$) appear with new scan data projected into 2D space. Each pointcloud consists of $N_m$ respectively $N_s$ values (see equation~\ref{equ:modelscene}).
 
-Based on respectively two points in model and scene scan a pre-transformation can be computed with the above method.
+\begin{align}
+\label{equ:modelscene}
+M &= \{m_i \mid i = 1...N_m\} \\
+S &= \{s_j \mid j = 1...N_s\} \nonumber
+\end{align}
 
-We transform the whole scans into 2D space so that the position and normals of two selected scan points match.\todo{evtl picture}
+The use of TSD representation provides an efficient extraction of model normals in the reconstruction step\todo{ref on that; tsd, kinect fustion}. To match both data sets normals from the scene dataset being calculated with XY. So $m_i$ and $s_i$ consist of $(x_i, y_i, \phi_i)^T$ respectively $(x_j, y_j, \phi_j)^T$ where $\phi$ represents the angle of the points normal in the pointcloud. Figure~\ref{fig:pointcloud} visualizes a dataset with its normals.
+
+\begin{figure}[h] 
+	\centering 
+	\missingfigure[figheight=3cm]{Scan with Normals}
+	\caption{Illustration of a pointcloud with its normal vectors.} 
+	\label{fig:pointcloud}
+\end{figure}
+
+With the information of normal vectors it is possible to calculate a transformation ($T_{ij}$) between $M$ and $S$ taking only the information of one scan point from each dataset ($m_i$, $s_j$) into consideration. Calculation of $T_{ij}$ is as follows\todo{right calculation}:
+
+\begin{align}
+\label{equ:tij}
+\bigtriangleup \phi &= \phi_j - \phi_i \\
+T_{ij} &=
+\begin{pmatrix}
+\cos(\bigtriangleup \phi) & -\sin(\bigtriangleup \phi) & (x_j - x_i)(\cos(\bigtriangleup \phi) * x_i)\\
+\sin(\bigtriangleup \phi) &  \cos(\bigtriangleup \phi) & (x_j - x_i)(\cos(\bigtriangleup \phi) * x_i)\\
+0 & 0 & 1
+\end{pmatrix}
+\nonumber
+\end{align}
+
+RNM searches for matching point pairs in $M$ and $S$. In section XY we introduce a rating function based on the actual map representation in TSD space ($m_{TSD}$) to estimate the quality of each calculated transformation ($T_{ij}$). This rating function is denoted as $f_{rating}(T_{ij},m_{TSD})$.
+
+%%------------------
+%The use of the TSD representation allows an easy extraction of the scans normals during reconstruction step\todo{normals from tsd --> kinect fusion}. Additionally calculating the actual scans normals with \todo{algorithm for normal of scene} enables us to match the two scans, taking only the information of two scan points and their normals into account\todo{figure on that}. Let $M_n$ and $S_n$ be the models and scenes scan points at index n projected into 2D space. Each element of $M_n$ and $S_n$ therefore consists of a $x_n$ and a $y_n$ coordinate in 2D space. Further there is information about the normal of each scan point denoted as $NM_n$ for the models normals and $NS_n$ for the scenes normals. Each element of $NM$ and $NS$ consists of an angle $\phi_n$ representing the direction of the normal. 
+%
+%Based on respectively two points in model and scene scan a pre-transformation can be computed with the above method.
+%
+%We transform the whole scans into 2D space so that the position and normals of two selected scan points match.\todo{evtl picture}
+%%------------------
 
 \subsection{PDF}
 To get an estimation of the actual pose $\widehat{x_t}$ \todo{describe pose notation} we search for the maximum likelihood of the actual measurement $z_t$ under incorporation of the actual pose $x_t$ and the map data $m$ as follows\todo{ref}:
