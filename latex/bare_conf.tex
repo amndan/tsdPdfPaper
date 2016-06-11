@@ -432,7 +432,7 @@ M &= \{m_i \mid i = 1...N_m\} \\
 S &= \{s_j \mid j = 1...N_s\} \nonumber
 \end{align}
 
-The use of TSD representation provides an efficient extraction of model normals in the reconstruction step\todo{ref on that; tsd, kinect fustion}. To match both data sets normals from the scene dataset being calculated with XY. So $m_i$ and $s_i$ consist of $(x_i, y_i, \phi_i)^T$ respectively $(x_j, y_j, \phi_j)^T$ where $\phi$ represents the angle of the points normal in the pointcloud. Figure~\ref{fig:pointcloud} visualizes a dataset with its normals.
+The use of TSD representation provides an efficient extraction of model normals in the reconstruction step\todo{ref on that; tsd, kinect fustion}. To match both data sets normals from the scene dataset being calculated with XY. So $m_i=M[i]$ and $s_i=S[i]$ consist of $(x_i, y_i, \phi_i)^T$ respectively $(x_j, y_j, \phi_j)^T$ where $\phi$ represents the angle of the points normal in the pointcloud. Figure~\ref{fig:pointcloud} visualizes a dataset with its normals.
 
 \begin{figure}[h] 
 	\centering 
@@ -487,25 +487,21 @@ This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low c
 	\caption{Random Normal Matching}
 	\label{alg:rnm}
 	\begin{algorithmic}[1]
-		\Function{$f_{RNM}$}{$M$, $\phi_M$, $S$, $trials$, $span$, $x_{t-1}$}
+		\Function{$f_{RNM}$}{$M$, $S$, $trials$, $span$}
 		\State $S \gets subsample(S, R_{sub})$
 		\State $C \gets extractControlSet(S)$
-		\State $\phi_S \gets calculateNormals(S)$
+		\State $S \gets calculateNormals(S)$
 		\State $bestProb \gets 0.0$
 		\ForAll{$trials$}
 		\State $idx_{rand} \gets rand()$
-		\State $pose1 \gets getPose(M[idx_{rand}], \phi_M[idx_{rand}])$
 		\State $idx_{min} \gets idx_{rand} - span$
 		\State $idx_{max} \gets idx_{rand} + span$
 		\For{$i\gets idx_{min}, idx_{max}$}
-		\State $pose2 \gets getPose(S[i], \phi_S[i])$
-		\State $T \gets getTransformation(pose1, pose2)$
-		\State $T_{map} \gets x_{t-1} \cdot T$
-		\State $C^* = T_{map} \cdot C $ \Comment Transform scan into map
-		\State $prob = rating(C^*)$ \Comment rating function
+		\State $T_{ij} \gets getTrans(M[idx_{rand}], S[i])$
+		\State $prob \gets f_{rating}(T_{ij},m_{TSD})$
 		\If{$prob > bestProb$}
-		\State $T_{best} = T$
-		\State $bestProb = prob$
+		\State $T_{best} \gets T_{ij}$
+		\State $bestProb \gets prob$
 		\EndIf
 		\EndFor
 		\EndFor
@@ -514,7 +510,9 @@ This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low c
 	\end{algorithmic}
 \end{algorithm}
 
-Algorithm~\ref{alg:rnm} shows the whole RNM approach. In line 2 scene points get subsampled with subsampling factor $R_{sub}$. \todo{subsampling now is based on a random approach with a probability; future work to make this more efficient} Next, in line~3 the so called control set is extracted from scene points. It is a subset of scene points and is used in the rating function to rate the transformations. \todo{better description here} In line~4 the normal vectors of scene points are calculated. They are stored as angles in $\phi_S$. In line~7 to~10 the random indexes get calculated as shown in figure~\ref{fig:span}. The function $getPose()$ expresses the generation of a 2D pose with a scan point and its normal vector at a given index.
+
+
+Algorithm~\ref{alg:rnm} shows the whole RNM approach. In line 2 scene points get subsampled with subsampling factor $R_{sub}$. \todo{subsampling now is based on a random approach with a probability; future work to make this more efficient} Next, in line~3 the so called control set is extracted from scene points. It is a subset of scene points and is used in the rating function to rate the transformations. \todo{better description here} In line~4 the normal vectors of scene points are calculated -- normals from model points got calculated in reconstruction step. In line~7 to~9 the random indexes get calculated as shown in figure~\ref{fig:span}. From line~10 to~17 the best transformation is searched with the rating function. The function $getTrans$ in line~11 implements equation~\ref{equ:tij} to determine the transformation between a model and a scene point. Finally in line~19 the transformation with maximum rating is returned as a rough estimation of the transformation between the two consecutive scans.
 
 
 %%------------------
@@ -558,6 +556,18 @@ f_{prob}(z^i_t, x_t) \sim p \left ( z^i_t|x_t,m \right )
 
 So determining the actual pose results in maximizing over all positions (see equation~\ref{equ:withfunction}). Iterating over the three dimensional space of the robots position would lead to unacceptable high computational costs. So a randomized approach with $x_{t-1}$ as initial hint is used. The approach is called Random Normal Matching (RNM) and described in the following section. \todo{rand function} \todo{+ - span ueberlauf} \todo{getTrafo - thing with normals} \todo{access of m and s returns a pose because of saving normals} \todo{transformation multiply?} \todo{getPose} \todo{T multiply with xt-1 is not possible; need xt-1 a frame not a pose}
 
+\begin{algorithm}
+	\caption{Rating}
+	\label{alg:rating}
+	\begin{algorithmic}[1]
+		\Function{$f_{XXX}$}{$XX$, $XX$}
+		\State $T_{map} \gets x_{t-1} \cdot T_{ij}$
+		\State $C^* = T_{map} \cdot C $ \Comment Transform scan into map
+		\State $prob = rating(C^*)$ \Comment rating function
+		\State \Return $XX$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
 
 \section{Introduction}
 % no \IEEEPARstart
