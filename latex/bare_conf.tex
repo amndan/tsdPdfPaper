@@ -315,7 +315,7 @@
 
 % *** PDF, URL AND HYPERLINK PACKAGES ***
 %
-\usepackage[textsize=tiny]{todonotes}
+\usepackage[textsize=tiny, disable]{todonotes}
 \presetkeys{todonotes}{fancyline}{}
 
 
@@ -487,19 +487,18 @@ This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low c
 	\caption{Random Normal Matching}
 	\label{alg:rnm}
 	\begin{algorithmic}[1]
-		\Function{$f_{RNM}$}{$M$, $S$, $trials$, $span$, $x_{t-1}$}
-		\State $S \gets subsample(S)$
+		\Function{$f_{RNM}$}{$M$, $\phi_M$, $S$, $trials$, $span$, $x_{t-1}$}
+		\State $S \gets subsample(S, R_{sub})$
 		\State $C \gets extractControlSet(S)$
-		\State $N_S \gets calculateNormals(S)$
-		\State $N_M \gets calculateNormals(M)$
+		\State $\phi_S \gets calculateNormals(S)$
 		\State $bestProb \gets 0.0$
 		\ForAll{$trials$}
 		\State $idx_{rand} \gets rand()$
-		\State $pose1 \gets getPose(M[idx_{rand}], N_M)$
+		\State $pose1 \gets getPose(M[idx_{rand}], \phi_M[idx_{rand}])$
 		\State $idx_{min} \gets idx_{rand} - span$
 		\State $idx_{max} \gets idx_{rand} + span$
 		\For{$i\gets idx_{min}, idx_{max}$}
-		\State $pose2 \gets getPose(S[idx_{rand}], N_S)$
+		\State $pose2 \gets getPose(S[i], \phi_S[i])$
 		\State $T \gets getTransformation(pose1, pose2)$
 		\State $T_{map} \gets x_{t-1} \cdot T$
 		\State $C^* = T_{map} \cdot C $ \Comment Transform scan into map
@@ -515,7 +514,7 @@ This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low c
 	\end{algorithmic}
 \end{algorithm}
 
-Algorithm~\ref{alg:rnm} shows the whole RNM approach. In lines~2 to~5 \todo{subsampling of M?}
+Algorithm~\ref{alg:rnm} shows the whole RNM approach. In line 2 scene points get subsampled with subsampling factor $R_{sub}$. \todo{subsampling now is based on a random approach with a probability; future work to make this more efficient} Next, in line~3 the so called control set is extracted from scene points. It is a subset of scene points and is used in the rating function to rate the transformations. \todo{better description here} In line~4 the normal vectors of scene points are calculated. They are stored as angles in $\phi_S$. In line~7 to~10 the random indexes get calculated as shown in figure~\ref{fig:span}. The function $getPose()$ expresses the generation of a 2D pose with a scan point and its normal vector at a given index.
 
 
 %%------------------
