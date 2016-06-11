@@ -1,6 +1,6 @@
 %% Creator: Inkscape inkscape 0.48.4, www.inkscape.org
 %% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
-%% Accompanies image file 'array.pdf' (pdf, eps, ps)
+%% Accompanies image file 'normals.pdf' (pdf, eps, ps)
 %%
 %% To include the image in your LaTeX document, write
 %%   \input{<filename>.pdf_tex}
@@ -36,7 +36,7 @@
   }%
   \providecommand\rotatebox[2]{#2}%
   \ifx\svgwidth\undefined%
-    \setlength{\unitlength}{240.375bp}%
+    \setlength{\unitlength}{378.05bp}%
     \ifx\svgscale\undefined%
       \relax%
     \else%
@@ -48,18 +48,10 @@
   \global\let\svgwidth\undefined%
   \global\let\svgscale\undefined%
   \makeatother%
-  \begin{picture}(1,0.42808112)%
-    \put(0,0){\includegraphics[width=\unitlength]{array.pdf}}%
-    \put(0.53759608,0.201316){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$span$}}}%
-    \put(0.37286182,0.201316){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$span$}}}%
-    \put(0.48354104,0.38322933){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$idx_{rand}$}}}%
-    \put(0.31630235,0.00546469){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$idx_{min}$}}}%
-    \put(0.64995836,0.00546469){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$idx_{max}$}}}%
-    \put(0.90872071,0.00546469){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$N_s$}}}%
-    \put(0.16121021,0.00546469){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$0$}}}%
-    \put(0.16121021,0.17784722){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$0$}}}%
-    \put(0.90872071,0.17784722){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$N_m$}}}%
-    \put(-0.02392771,0.27404263){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$Model$}}}%
-    \put(-0.01738068,0.10059853){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$Szene$}}}%
+  \begin{picture}(1,0.36893268)%
+    \put(0,0){\includegraphics[width=\unitlength]{normals.pdf}}%
+    \put(0.05953158,0.19603578){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$Wall$}}}%
+    \put(0.25019619,0.22248731){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$Scan Point$}}}%
+    \put(0.64649671,0.12548292){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$Normal$}}}%
   \end{picture}%
 \endgroup%

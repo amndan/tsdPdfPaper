@@ -407,7 +407,7 @@ The abstract goes here.
 \todo{DO A RAYCAST AFTER FINDING PRE TRAFO. THEN DO ICP WITH NEW RAYCAST DATA!!!}
 
 \subsection{SLAM}
-In general we use our existing 2D-SLAM algorithm described in \cite{Koch2015} and \cite{May2014}\todo{open source, name, link}. The approach is based on the truncated signed distance function (TSDF) \todo{ref}. For the readers convenience and to classify the work of this publication the general structure of the algorithm follows. Primary, the approach consists of four steps: 
+In general we use our existing 2D-SLAM algorithm described in \cite{Koch2015} and \cite{May2014}\todo{open source, name, link}. The approach is based on the truncated signed distance function (TSDF) \todo{ref}. For the readers convenience and to classify the work of this publication the general structure of this 2D-SLAM algorithm follows. Primary, the approach consists of four steps: 
 \begin{itemize}
 	\item Reconstruction
 	\item Registration
@@ -417,14 +417,14 @@ In general we use our existing 2D-SLAM algorithm described in \cite{Koch2015} an
 If new laser scanner data \todo{mention laser scanners in the beginning} arrives these steps are triggered one after another. The reconstruction step serves for extracting synthetic laser scan data from the actual map at the last known position. Doing so enables to get a sum of information from all scans so far.\todo{anders schreiben} This is done by raycasting through TSD space as described in \cite{May2014}. Registration means matching the scan data from the reconstruction step and the newly arrived scan data. This Publication describes an efficient and accurate method for this registration step. After the registration the relative pose change of the two scans is determined and the robots absolute pose can be updated. With this information the new scan data can be integrated into the map representation (data integration step). Finally, the map represented as TSDFs gets converted to a more user-friendly occupancy grid map in the grid extraction step. \cite{May2014}
 
 \subsection{Registration}
-The registration of two consecutive laser scans means extracting the relative displacement of the two scans. A widely used approach for that is to use the ICP\todo{cite} algorithm. This performs well if the displacement between two scans is small. E.g. small scan rates or high movement speeds can lead to greater displacements than the ICP algorithm can handle. Reason for that is the ICPs tendency to run into local minima. 
+The registration of two consecutive laser scans means extracting the relative displacement of the two scans. A widely used approach for that is to use the ICP\todo{cite} algorithm. This performs well if the displacement between two scans is small. Small scan rates or high movement speeds can lead to greater displacements than the ICP algorithm can handle. Reason for that is the ICPs tendency to run into local minima. 
 
 To overcome the restriction of small displacements between two consecutive scans, a registration method called Random Normal Matching (RNM) is introduced with this publication.
 
 \subsection{RNM}
 RNM tries to find a rude initial transformation between two consecutive laser scans. This transformation limits the displacements between the scans for the subsequent ICP step.
 
-Let $M$ and $S$ be the pointclouds to be matched for registration step. Model points ($M$) occur from reconstruction step (raycasting) and scene scan points ($S$) appear with new scan data projected into 2D space. Each pointcloud consists of $N_m$ respectively $N_s$ values (see equation~\ref{equ:modelscene}).
+Let $M$ and $S$ be the pointclouds to be matched for registration step. Model points $M$ occur from reconstruction step (raycasting) and scene scan points $S$ appear with new scan data projected into 2D space. Each pointcloud consists of $N_m$ respectively $N_s$ values (see equation~\ref{equ:modelscene}).
 
 \begin{align}
 \label{equ:modelscene}
@@ -432,13 +432,14 @@ M &= \{m_i \mid i = 1...N_m\} \\
 S &= \{s_j \mid j = 1...N_s\} \nonumber
 \end{align}
 
-The use of TSD representation provides an efficient extraction of model normals in the reconstruction step\todo{ref on that; tsd, kinect fustion}. To match both data sets normals from the scene dataset being calculated with XY. So $m_i=M[i]$ and $s_i=S[i]$ consist of $(x_i, y_i, \phi_i)^T$ respectively $(x_j, y_j, \phi_j)^T$ where $\phi$ represents the angle of the points normal in the pointcloud. Figure~\ref{fig:pointcloud} visualizes a dataset with its normals.
+The use of TSD representation provides an efficient extraction of model normals in the reconstruction step. \todo{ref on that; tsd, kinect fustion} Furthermore the normal vectors of the scene point cloud can be calculated with a Principal Component Analysis (PCA). \todo{normals of scene algo PCA} So $m_i=M[i]$ and $s_i=S[i]$ consist of $(x_i, y_i, \phi_i)^T$ respectively $(x_j, y_j, \phi_j)^T$ where $\phi$ represents the angle of the points normal in the pointcloud. Figure~\ref{fig:pointcloud} visualizes a dataset with its normals.
 
-\begin{figure}[h] 
+\begin{figure}[htb] 
 	\centering 
-	\missingfigure[figheight=3cm]{Scan with Normals}
-	\caption{Illustration of a pointcloud with its normal vectors.} 
+	\def\svgwidth{200pt} 
 	\label{fig:pointcloud}
+	\input{images/normals.pdf_tex} 
+	\caption{Illustration of a pointcloud with its normal vectors.} 
 \end{figure}
 
 With the information of normal vectors it is possible to calculate a transformation ($T_{ij}$) between $M$ and $S$ taking only the information of a single scan point from each dataset ($m_i$, $s_j$) into consideration. Calculation of $T_{ij}$ is as follows\todo{right calculation}:
