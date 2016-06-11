@@ -441,7 +441,7 @@ The use of TSD representation provides an efficient extraction of model normals 
 	\label{fig:pointcloud}
 \end{figure}
 
-With the information of normal vectors it is possible to calculate a transformation ($T_{ij}$) between $M$ and $S$ taking only the information of one scan point from each dataset ($m_i$, $s_j$) into consideration. Calculation of $T_{ij}$ is as follows\todo{right calculation}:
+With the information of normal vectors it is possible to calculate a transformation ($T_{ij}$) between $M$ and $S$ taking only the information of a single scan point from each dataset ($m_i$, $s_j$) into consideration. Calculation of $T_{ij}$ is as follows\todo{right calculation}:
 
 \begin{align}
 \label{equ:tij}
@@ -451,11 +451,72 @@ T_{ij} &=
 \cos(\bigtriangleup \phi) & -\sin(\bigtriangleup \phi) & (x_j - x_i)(\cos(\bigtriangleup \phi) * x_i)\\
 \sin(\bigtriangleup \phi) &  \cos(\bigtriangleup \phi) & (x_j - x_i)(\cos(\bigtriangleup \phi) * x_i)\\
 0 & 0 & 1
-\end{pmatrix}
+\end{pmatrix}.
 \nonumber
 \end{align}
 
-RNM searches for matching point pairs in $M$ and $S$. In section XY we introduce a rating function based on the actual map representation in TSD space ($m_{TSD}$) to estimate the quality of each calculated transformation ($T_{ij}$). This rating function is denoted as $f_{rating}(T_{ij},m_{TSD})$.
+RNM searches for matching point pairs in $M$ and $S$. In section XY we introduce a rating function based on the actual map representation in TSD space ($m_{TSD}$). This rating function is denoted as $f_{rating}(T_{ij},m_{TSD})$ and estimates the quality of each calculated transformation ($T_{ij}$). Maximizing $f_{rating}(T_{ij},m_{TSD})$ over all combinations of $i$ and $j$ would lead to a final Transformation (see equation~\ref{equ:max}).
+
+\begin{equation}
+\label{equ:max}
+\widehat{T_{ij}} = \max_{i,j} f_{rating}(T_{ij},m_{TSD})
+\end{equation}
+
+Maximizing over all possible transformations would lead to $N_m \times N_s$ calls to $f_{rating}$. To save computation effort we use a partially randomized approach for choosing indexes $i$ and $j$. Figure~\ref{fig:span} depicts this approach. 
+
+\begin{figure}[htb] 
+	\centering 
+	\def\svgwidth{200pt} 
+	\label{fig:span}
+	\input{images/array.pdf_tex} 
+	\caption{The Bars represent the model and scene scan arrays. Selecting a random index ($idx_{rnd}$) leads to one model array index and $2\times span + 1$ scene array indexes with range of $[idx_{min}; idx_{max}]$. For every combination of the selected model array index with each selected scene array index a pre-transformation gets computed.} 
+\end{figure}\todo{use i and j for indexes}
+
+At first a model point at a random index ($idx_{rand}$) is chosen. Afterwards several scene points at indexes around the one from model scan array ($idx_{rand}-span; idx_{rand}+span$) are chosen for the calculation of transformations. The step of selecting one model point and assign it to a group of scene points is repeated several times ($trials$ in algorithm~\ref{alg:rnm}) to find a good assumption of $T_{ij}$. 
+
+Assuming a robot only executes rotational movement and has its laser mounted at the kinematic center, the minimum affordable span at given angular scan resolution ($\Delta\varphi_{laser}$), scan rate $f_{scan}$, subsampling rate of scan data ($R_{sub}$) and maximum rotation speed of robot $\omega_{max}$, can be calculated with equation~\ref{equ:rot}.
+
+\begin{equation}
+\label{equ:rot}
+span \geq \frac{\omega_{max}}{\Delta\varphi_{laser} \times f_{scan} \times R_{sub}}
+\end{equation}
+
+This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low cost laser scanner \todo{ref rplidar} with $1^\circ$ angular resolution, $5.5~Hz$ scan rate and no subsampling ($R_{sub} = 1$) a minimum span of 66 is required. 
+
+\begin{algorithm}
+	\caption{Random Normal Matching}
+	\label{alg:rnm}
+	\begin{algorithmic}[1]
+		\Function{$f_{RNM}$}{$M$, $S$, $trials$, $span$, $x_{t-1}$}
+		\State $S \gets subsample(S)$
+		\State $C \gets extractControlSet(S)$
+		\State $N_S \gets calculateNormals(S)$
+		\State $N_M \gets calculateNormals(M)$
+		\State $bestProb \gets 0.0$
+		\ForAll{$trials$}
+		\State $idx_{rand} \gets rand()$
+		\State $pose1 \gets getPose(M[idx_{rand}], N_M)$
+		\State $idx_{min} \gets idx_{rand} - span$
+		\State $idx_{max} \gets idx_{rand} + span$
+		\For{$i\gets idx_{min}, idx_{max}$}
+		\State $pose2 \gets getPose(S[idx_{rand}], N_S)$
+		\State $T \gets getTransformation(pose1, pose2)$
+		\State $T_{map} \gets x_{t-1} \cdot T$
+		\State $C^* = T_{map} \cdot C $ \Comment Transform scan into map
+		\State $prob = rating(C^*)$ \Comment rating function
+		\If{$prob > bestProb$}
+		\State $T_{best} = T$
+		\State $bestProb = prob$
+		\EndIf
+		\EndFor
+		\EndFor
+		\State \Return $T_{best}$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+Algorithm~\ref{alg:rnm} shows the whole RNM approach. In lines~2 to~5 \todo{subsampling of M?}
+
 
 %%------------------
 %The use of the TSD representation allows an easy extraction of the scans normals during reconstruction step\todo{normals from tsd --> kinect fusion}. Additionally calculating the actual scans normals with \todo{algorithm for normal of scene} enables us to match the two scans, taking only the information of two scan points and their normals into account\todo{figure on that}. Let $M_n$ and $S_n$ be the models and scenes scan points at index n projected into 2D space. Each element of $M_n$ and $S_n$ therefore consists of a $x_n$ and a $y_n$ coordinate in 2D space. Further there is information about the normal of each scan point denoted as $NM_n$ for the models normals and $NS_n$ for the scenes normals. Each element of $NM$ and $NS$ consists of an angle $\phi_n$ representing the direction of the normal. 
@@ -498,44 +559,6 @@ f_{prob}(z^i_t, x_t) \sim p \left ( z^i_t|x_t,m \right )
 
 So determining the actual pose results in maximizing over all positions (see equation~\ref{equ:withfunction}). Iterating over the three dimensional space of the robots position would lead to unacceptable high computational costs. So a randomized approach with $x_{t-1}$ as initial hint is used. The approach is called Random Normal Matching (RNM) and described in the following section. \todo{rand function} \todo{+ - span ueberlauf} \todo{getTrafo - thing with normals} \todo{access of m and s returns a pose because of saving normals} \todo{transformation multiply?} \todo{getPose} \todo{T multiply with xt-1 is not possible; need xt-1 a frame not a pose}
 
-\subsection{Random Normal Matching}
-\begin{algorithm}
-	\caption{Random Normal Matching}\label{euclid}
-	\begin{algorithmic}[1]
-		\Function{$f_{RNM}$}{$M$, $S$, $trials$, $span$, $x_{t-1}$}
-			\State $S \gets subsample(S)$
-			\State $C \gets extractControlSet(S)$
-			\State $N_S \gets calculateNormals(S)$
-			\State $N_M \gets calculateNormals(C)$
-			\State $bestProb \gets 0.0$
-			\ForAll{$trials$}
-				\State $idx_{rand} \gets rand()$
-				\State $pose1 \gets getPose(M[idx_{rand}], N_M)$
-				\State $idx_{min} \gets idx_{rand} - span$
-				\State $idx_{max} \gets idx_{rand} + span$
-				\For{$i\gets idx_{min}, idx_{max}$}
-					\State $pose2 \gets getPose(S[idx_{rand}], N_S)$
-					\State $T \gets getTransformation(pose1, pose2)$
-					\State $T_{map} \gets x_{t-1} \cdot T$
-					\State $C^* = T_{map} \cdot C $ \Comment Transform scan into map
-					\State $prob = rating(C^*)$ \Comment rating function
-					\If{$prob > bestProb$}
-						\State $T_{best} = T$
-						\State $bestProb = prob$
-					\EndIf
-				\EndFor
-			\EndFor
-			\State \Return $T_{best}$
-		\EndFunction
-	\end{algorithmic}
-\end{algorithm}
-
-\begin{figure}[htb] 
-	\centering 
-	\def\svgwidth{200pt} 
-	\input{images/array.pdf_tex} 
-	\caption{The Bars represent the model and scene scan arrays. Selecting a random index ($idx_{rnd}$) leads to one model array index and $2\times span + 1$ scene array indexes with range of $[idx_{min}; idx_{max}]$. For every combination of the selected model array index with each selected scene array index a pre-transformation gets computed.} 
-\end{figure}
 
 \section{Introduction}
 % no \IEEEPARstart
