@@ -529,19 +529,33 @@ Algorithm~\ref{alg:rnm} shows the whole RNM approach. In line 2 scene points get
 %%------------------
 
 \subsection{Rating Function}
-To get an estimation of the actual pose $\widehat{x_t}$ \todo{describe pose notation} we search for the maximum likelihood of the actual measurement $z_t$ under incorporation of the actual pose $x_t$ and the map data $m$ as follows\todo{ref}:
+To rate the different transformations $T_{ij}$ we calculate a factor in proportion to the measurement probability $p \left (  z|x,m \right )$. In several probabilistic approaches the measurement probability is used as indicator for the correctness of an assumption. \todo{refs} \todo{incorporate movement probability in future} The measurement $z$ is represented as the control set $C$, a subset from the scene point cloud $\left(C \subset S\right)$. The map $m$ is represented as TSDFs called $m_{TSD}$. Whereas the position $x$ is represented as transformation matrix called $T_{abs,ij}$ and can directly be calculated from $T_{ij}$ with the last known transformation returned by SLAM algorithm, which is called $T_{t-1}$ (see equation~XY).
+ 
+\begin{equation}
+\label{equ:tf}
+T_{abs,ij} = T_{t-1} \cdot T_{ij}
+\end{equation}
+
+Taking the above paragraph into consideration the measurement probability for a specific transformation $T{ij}$ can be calculated as shown in equation~\ref{equ:prob}. Furthermore the rating function returns a value in proportion to this measurement probability. 
+
+\begin{equation}
+\label{equ:prob}
+p \left (  z = C|x = T_{abs,ij},m = m_{TSD} \right ) \sim f_{rating}(\cdot)
+\end{equation}
 
 \begin{equation}
 	\label{equ:maximum}
-	\widehat{x_t} = \max_{x_t} p \left (  z_t|x_t,m \right ).
+	f_{rating}(T_{ij},m_{TSD}) \sim p \left (  z|x,m \right ).
 \end{equation}
 
-The measurement $z_t$ is represented as actual laser scan data. Each scan consists of $n$ multiple range measurements $z^i_t$. Assuming \todo{ref}that scan rays are statistically independent from each other, equation~\ref{equ:maximum} can be denoted as:
+ Assuming \todo{ref}that scan points are statistically independent from each other, the measurement probability can be denoted as:
 
 \begin{equation}
 	\label{equ:multiply}
-	\widehat{x_t} = \max_{x_t} \prod_i p \left ( z^i_t|x_t,m \right ).
+	p \left (  z_t|x_t,m \right ) = \prod_i p \left ( C[i]|x_t,m \right ).
 \end{equation}
+
+
 
 Evaluating the probability for a given range measurement $z^i_t$ under a given position $x_t$ and the map $m$ a probability field can be used\todo{ref, picture prob map}. The probability field provides the likelihood for a single ray to impinge at a given Position in the map.
 
