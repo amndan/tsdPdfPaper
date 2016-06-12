@@ -432,31 +432,33 @@ M &= \{m_i \mid i = 1...N_m\} \\
 S &= \{s_j \mid j = 1...N_s\} \nonumber
 \end{align}
 
-The use of TSD representation provides an efficient extraction of model normals in the reconstruction step. \todo{ref on that; tsd, kinect fustion} Furthermore the normal vectors of the scene point cloud can be calculated with a Principal Component Analysis (PCA). \todo{normals of scene algo PCA} So $m_i=M[i]$ and $s_i=S[i]$ consist of $(x_i, y_i, \phi_i)^T$ respectively $(x_j, y_j, \phi_j)^T$ where $\phi$ represents the angle of the points normal in the pointcloud. Figure~\ref{fig:pointcloud} visualizes a dataset with its normals.
+%\subsubsection{Transformation of Pointclouds}
+The use of TSD representation provides an efficient extraction of model normals in the reconstruction step. \todo{ref on that; tsd, kinect fustion} Furthermore the normal vectors of the scene point cloud can be calculated with a Principal Component Analysis (PCA). \todo{normals of scene algo PCA} Therefore $m_i=M[i]$ and $s_i=S[i]$ consist of $(x_i, y_i, \phi_i)^T$ respectively $(x_j, y_j, \phi_j)^T$ where $\phi$ represents the angle of the points normal in the pointcloud. Figure~\ref{fig:pointcloud} visualizes a scans pointcloud with its normals.
 
 \begin{figure}[htb] 
 	\centering 
 	\def\svgwidth{200pt} 
-	\label{fig:pointcloud}
 	\input{images/normals.pdf_tex} 
-	\caption{Illustration of a pointcloud with its normal vectors.} 
+	\caption{Illustration of a scans pointcloud in 2D space with its normal vectors.} 
+	\label{fig:pointcloud}
 \end{figure}
 
-With the information of normal vectors it is possible to calculate a transformation ($T_{ij}$) between $M$ and $S$ taking only the information of a single scan point from each dataset ($m_i$, $s_j$) into consideration. Calculation of $T_{ij}$ is as follows\todo{right calculation}:
+With the information of the pointclouds normal vectors it is possible to calculate a transformation ($T_{ij}$) between $M$ and $S$ taking only the information of a single scan point from each dataset into consideration. According to this calculation of $T_{ij}$ is shown in equation~\ref{equ:tij}, where $c_{\phi}$ and $s_\phi$ are abbreviations for $\cos(\Delta\phi)$ and $\sin(\Delta\phi)$.\todo{right calculation}
 
 \begin{align}
 \label{equ:tij}
-\bigtriangleup \phi &= \phi_j - \phi_i \\
+\bigtriangleup \phi &= \phi_j - \phi_i \nonumber\\ 
 T_{ij} &=
 \begin{pmatrix}
-\cos(\bigtriangleup \phi) & -\sin(\bigtriangleup \phi) & (x_j - x_i)(\cos(\bigtriangleup \phi) * x_i)\\
-\sin(\bigtriangleup \phi) &  \cos(\bigtriangleup \phi) & (x_j - x_i)(\cos(\bigtriangleup \phi) * x_i)\\
+c_\phi & -s_\phi & x_i - (c_\phi * x_j - s_\phi * y_j)\\
+s_\phi &  c_\phi & y_i - (s_\phi * x_j + c_\phi * y_j)\\
 0 & 0 & 1
-\end{pmatrix}.
-\nonumber
+\end{pmatrix}
 \end{align}
 
-RNM searches for matching point pairs in $M$ and $S$. In section XY we introduce a rating function based on the actual map representation in TSD space ($m_{TSD}$). This rating function is denoted as $f_{rating}(T_{ij},m_{TSD})$ and estimates the quality of each calculated transformation ($T_{ij}$). Maximizing $f_{rating}(T_{ij},m_{TSD})$ over all combinations of $i$ and $j$ would lead to a final Transformation (see equation~\ref{equ:max}).
+%\subsubsection{Find the Best Transformation}
+
+Assuming that each pair of consecutive scans has some redundant information, in particular some overlapping, RNM searches for matching point pairs in $M$ and $S$. In section XY we introduce a rating function based on the actual map representation in TSD space ($m_{TSD}$). This rating function is denoted as $f_{rating}(T_{ij},m_{TSD})$ and estimates the quality of each calculated transformation ($T_{ij}$). Maximizing $f_{rating}(T_{ij},m_{TSD})$ over all combinations of $i$ and $j$ would lead to the best matching Transformation taking $f_{rating}$ into account (see equation~\ref{equ:max}).
 
 \begin{equation}
 \label{equ:max}
@@ -468,21 +470,23 @@ Maximizing over all possible transformations would lead to $N_m \times N_s$ call
 \begin{figure}[htb] 
 	\centering 
 	\def\svgwidth{200pt} 
-	\label{fig:span}
-	\input{images/array.pdf_tex} 
+	\input{images/array.pdf_tex}  
 	\caption{The Bars represent the model and scene scan arrays. Selecting a random index ($idx_{rnd}$) leads to one model array index and $2\times span + 1$ scene array indexes with range of $[idx_{min}; idx_{max}]$. For every combination of the selected model array index with each selected scene array index a pre-transformation gets computed.} 
+	\label{fig:span}
 \end{figure}\todo{use i and j for indexes}
 
-At first a model point at a random index ($idx_{rand}$) is chosen. Afterwards several scene points at indexes around the one from model scan array ($idx_{rand}-span; idx_{rand}+span$) are chosen for the calculation of transformations. The step of selecting one model point and assign it to a group of scene points is repeated several times ($trials$ in algorithm~\ref{alg:rnm}) to find a good assumption of $T_{ij}$. 
+At first a model point at a random index ($idx_{rand}$) is chosen. Afterwards a range of scene points at indexes around the one from model scan array $\left([idx_{rand}-span; idx_{rand}+span]\right)$ are chosen for the calculation of transformations. The step of selecting one model point and assign it to a group of scene points is repeated several times (variable $trials$ in algorithm~\ref{alg:rnm}) to find a good assumption of $T_{ij}$. 
 
-Assuming a robot only executes rotational movement and has its laser mounted at the kinematic center, the minimum affordable span at given angular scan resolution ($\Delta\varphi_{laser}$), scan rate $f_{scan}$, subsampling rate of scan data ($R_{sub}$) and maximum rotation speed of robot $\omega_{max}$, can be calculated with equation~\ref{equ:rot}.
+Matching a random model point with a subset of scene points leads to stricter constraints. The displacement between two successive scans must be inside the $span$ bounds. Exemplary, assuming a robot only executes rotational movement and has its laser mounted at the kinematic center, the minimum affordable span at given angular scan resolution ($\Delta\varphi_{laser}$), scan rate $f_{scan}$, subsampling rate of scan data ($R_{sub}$) and maximum rotation speed of robot $\omega_{max}$, can be calculated with equation~\ref{equ:rot}.
 
 \begin{equation}
 \label{equ:rot}
 span \geq \frac{\omega_{max}}{\Delta\varphi_{laser} \times f_{scan} \times R_{sub}}
 \end{equation}
 
-This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low cost laser scanner \todo{ref rplidar} with $1^\circ$ angular resolution, $5.5~Hz$ scan rate and no subsampling ($R_{sub} = 1$) a minimum span of 66 is required. 
+This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low cost laser scanner \todo{ref rplidar} with $1^\circ$ angular resolution, $5.5~Hz$ scan rate and no subsampling ($R_{sub} = 1$) a minimum span of 66 is required. \todo{is that to much; compare with actual span and versuche; ransac_phi_max parameter in software}
+
+%\subsubsection{RNM Algorithm}
 
 \begin{algorithm}
 	\caption{Random Normal Matching}
@@ -498,8 +502,8 @@ This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low c
 		\State $idx_{min} \gets idx_{rand} - span$
 		\State $idx_{max} \gets idx_{rand} + span$
 		\For{$i\gets idx_{min}, idx_{max}$}
-		\State $T_{ij} \gets getTrans(M[idx_{rand}], S[i])$
-		\State $prob \gets f_{rating}(T_{ij},m_{TSD})$
+		\State $T_{ij} \gets getTrans\left(M[idx_{rand}], S[i]\right)$
+		\State $prob \gets f_{rating}\left(T_{ij},m_{TSD}, C\right)$
 		\If{$prob > bestProb$}
 		\State $T_{best} \gets T_{ij}$
 		\State $bestProb \gets prob$
@@ -513,7 +517,7 @@ This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low c
 
 
 
-Algorithm~\ref{alg:rnm} shows the whole RNM approach. In line 2 scene points get subsampled with subsampling factor $R_{sub}$. \todo{subsampling now is based on a random approach with a probability; future work to make this more efficient} Next, in line~3 the so called control set is extracted from scene points. It is a subset of scene points and is used in the rating function to rate the transformations. \todo{better description here} In line~4 the normal vectors of scene points are calculated -- normals from model points got calculated in reconstruction step. In line~7 to~9 the random indexes get calculated as shown in figure~\ref{fig:span}. From line~10 to~17 the best transformation is searched with the rating function. The function $getTrans$ in line~11 implements equation~\ref{equ:tij} to determine the transformation between a model and a scene point. Finally in line~19 the transformation with maximum rating is returned as a rough estimation of the transformation between the two consecutive scans.
+Algorithm~\ref{alg:rnm} shows the whole RNM approach. In line 2 scene points get subsampled with subsampling factor $R_{sub}$. \todo{subsampling now is based on a random approach with a probability; future work to make this more efficient} Next, in line~3, the so called control set is extracted from scene points. It is a subset of scene points and is used in the rating function to rate the transformations. \todo{better description here} In line~4 the normal vectors of scene points are calculated -- normals from model points got calculated in reconstruction step. In line~7 to~9 the random indexes get calculated as shown in figure~\ref{fig:span}. From line~10 to~17 the best transformation is searched with the rating function. The function $getTrans$ in line~11 implements equation~\ref{equ:tij} to determine the transformation between a model and a scene point. Finally in line~19 the transformation with maximum rating is returned as a rough estimation of the transformation between the two consecutive scans.
 
 
 %%------------------
@@ -524,7 +528,7 @@ Algorithm~\ref{alg:rnm} shows the whole RNM approach. In line 2 scene points get
 %We transform the whole scans into 2D space so that the position and normals of two selected scan points match.\todo{evtl picture}
 %%------------------
 
-\subsection{PDF}
+\subsection{Rating Function}
 To get an estimation of the actual pose $\widehat{x_t}$ \todo{describe pose notation} we search for the maximum likelihood of the actual measurement $z_t$ under incorporation of the actual pose $x_t$ and the map data $m$ as follows\todo{ref}:
 
 \begin{equation}
