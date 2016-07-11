@@ -417,7 +417,7 @@ In general we use our existing 2D-SLAM algorithm described in \cite{Koch2015} an
 If new laser scanner data \todo{mention laser scanners in the beginning} arrives these steps are triggered one after another. The reconstruction step serves for extracting synthetic laser scan data from the actual map at the last known position. Doing so enables to get a sum of information from all scans so far.\todo{anders schreiben} This is done by raycasting through TSD space as described in \cite{May2014}. Registration means matching the scan data from the reconstruction step and the newly arrived scan data. This Publication describes an efficient and accurate method for this registration step. After the registration the relative pose change of the two scans is determined and the robots absolute pose can be updated. With this information the new scan data can be integrated into the map representation (data integration step). Finally, the map represented as TSDFs gets converted to a more user-friendly occupancy grid map in the grid extraction step. \cite{May2014}
 
 \subsection{Registration}
-The registration of two consecutive laser scans means extracting the relative displacement of the two scans. A widely used approach for that is to use the ICP\todo{cite} algorithm. This performs well if the displacement between two scans is small. Small scan rates or high movement speeds can lead to greater displacements than the ICP algorithm can handle. Reason for that is the ICPs tendency to run into local minima. 
+The registration of two consecutive laser scans means extracting the relative displacement of the two scans. A widely used approach for that is to use the ICP \todo{cite} algorithm. This performs well if the displacement between two scans is small. Small scan rates or high movement speeds can lead to greater displacements than the ICP algorithm can handle. Reason for that is the ICPs tendency to run into local minima. 
 
 To overcome the restriction of small displacements between two consecutive scans, a registration method called Random Normal Matching (RNM) is introduced with this publication.
 
@@ -458,14 +458,14 @@ s_\phi &  c_\phi & y_i - (s_\phi * x_j + c_\phi * y_j)\\
 
 %\subsubsection{Find the Best Transformation}
 
-Assuming that each pair of consecutive scans has some redundant information, in particular some overlapping, RNM searches for matching point pairs in $M$ and $S$. In section XY we introduce a rating function based on the actual map representation in TSD space ($m_{TSD}$). This rating function is denoted as $f_{rating}(T_{ij},m_{TSD})$ and estimates the quality of each calculated transformation ($T_{ij}$). Maximizing $f_{rating}(T_{ij},m_{TSD})$ over all combinations of $i$ and $j$ would lead to the best matching Transformation $\widehat{T_{ij}}$ taking $f_{rating}$ into account (see equation~\ref{equ:max}). $\widehat{T_{ij}}$ is the final estimation of the displacement between two consecutive scans returned by RNM algorithm.
+Assuming that each pair of consecutive scans has some redundant information, in particular some overlapping, RNM searches for matching point pairs in $M$ and $S$. In section~\ref{sec:TSDPF} we introduce a rating function based on the actual map representation in TSD space ($m_{TSD}$). This rating function is denoted as $f_{rating}$ and estimates the quality of each calculated transformation ($T_{ij}$). Maximizing $f_{rating}$ over all combinations of $i$ and $j$ would lead to the best matching Transformation $\widehat{T_{ij}}$ (see equation~\ref{equ:max}). $\widehat{T_{ij}}$ denotes the final estimation of the displacement between two consecutive scans returned by RNM algorithm.
 
 \begin{equation}
 \label{equ:max}
-\widehat{T_{ij}} = \max_{i,j} f_{rating}(T_{ij},m_{TSD})
+\widehat{T_{ij}} = \max_{i,j} f_{rating}(...)
 \end{equation}
 
-Maximizing over all possible transformations would lead to $N_m \times N_s$ calls to $f_{rating}$. To save computation effort we use a partially randomized approach for choosing indexes $i$ and $j$. Figure~\ref{fig:span} depicts this approach. 
+Maximizing over all possible transformations would lead to $N_m \times N_s$ calls to $f_{rating}$. To save computing effort we use a partially randomized approach for choosing pairs of indexes $i$ and $j$. Figure~\ref{fig:span} depicts this approach. 
 
 \begin{figure}[htb] 
 	\centering 
@@ -477,14 +477,14 @@ Maximizing over all possible transformations would lead to $N_m \times N_s$ call
 
 At first a model point at a random index ($idx_{rand}$) is chosen. Afterwards a range of scene points at indexes around the one from model scan array $\left([idx_{rand}-span; idx_{rand}+span]\right)$ are chosen for the calculation of transformations. The step of selecting one model point and assign it to a group of scene points is repeated several times (variable $trials$ in algorithm~\ref{alg:rnm}) to find a good assumption of $T_{ij}$. 
 
-Matching a random model point with a subset of scene points leads to stricter constraints. The displacement between two successive scans must be inside the $span$ bounds. Exemplary, assuming a robot only executes rotational movement and has its laser mounted at the kinematic center, the minimum affordable span at given angular scan resolution ($\Delta\varphi_{laser}$), scan rate $f_{scan}$, subsampling rate of scan data ($R_{sub}$) and maximum rotation speed of robot $\omega_{max}$, can be calculated with equation~\ref{equ:rot}.
+Matching a random model point with a subset of scene points leads to stricter constraints. The displacement between two successive scans must be inside the $span$ bounds. Exemplary, assuming a robot only executes rotational movement and has its laser mounted at the kinematic center, the minimum affordable span at given angular scan resolution ($\Delta\varphi_{laser}$), scan rate $f_{scan}$, subsampling rate of scan data ($r_{sub}$) and maximum rotation speed of robot $\omega_{max}$, can be calculated with equation~\ref{equ:rot}.
 
 \begin{equation}
 \label{equ:rot}
-span \geq \frac{\omega_{max}}{\Delta\varphi_{laser} \times f_{scan} \times R_{sub}}
+span \geq \frac{\omega_{max}}{\Delta\varphi_{laser} \times f_{scan} \times r_{sub}}
 \end{equation}
 
-This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low cost laser scanner \todo{ref rplidar} with $1^\circ$ angular resolution, $5.5~Hz$ scan rate and no subsampling ($R_{sub} = 1$) a minimum span of 66 is required. \todo{is that to much; compare with actual span and versuche; ransac_phi_max parameter in software}
+This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low cost laser scanner \todo{ref rplidar} with $1^\circ$ angular resolution, $5.5~Hz$ scan rate and no subsampling ($r_{sub} = 1$) a minimum span of 66 is required. \todo{is that to much; compare with actual span and versuche; ransac_phi_max parameter in software}
 
 %\subsubsection{RNM Algorithm}
 
@@ -492,32 +492,34 @@ This means for a maximal rotational speed of $360 \frac{deg}{sec}$ using a low c
 	\caption{Random Normal Matching}
 	\label{alg:rnm}
 	\begin{algorithmic}[1]
-		\Function{$f_{RNM}$}{$M$, $S$, $trials$, $span$}
-		\State $S \gets subsample(S, R_{sub})$
+		\Function{$f_{RNM}$}{$M$, $S$, $trials$, $span$, $r_{sub}$,  $T_{t-1}$, $m_{TSD}$, $p_r$}
+		\State $S \gets subsample(S, r_{sub})$
 		\State $C \gets extractControlSet(S)$
 		\State $S \gets calculateNormals(S)$
 		\State $bestProb \gets 0.0$
-		\ForAll{$trials$}
+		\ForAll{$trials$} \Comment generate random index
 		\State $idx_{rand} \gets rand()$
 		\State $idx_{min} \gets idx_{rand} - span$
 		\State $idx_{max} \gets idx_{rand} + span$
 		\For{$i\gets idx_{min}, idx_{max}$}
-		\State $T_{ij} \gets getTrans\left(M[idx_{rand}], S[i]\right)$
-		\State $prob \gets f_{rating}\left(T_{ij},m_{TSD}, C\right)$
-		\If{$prob > bestProb$}
-		\State $T_{best} \gets T_{ij}$
+		\State $T_{ij} \gets getTrans\left(M[idx_{rand}], S[i]\right)$ \Comment equ.~\ref{equ:tij}
+		\State $prob \gets f_{rating} \left (  T_{ij}, T_{t-1}, m_{TSD}, C, p_r\right )$
+		
+		
+		\If{$prob > bestProb$} \Comment equation~\ref{equ:max}
+		\State $\widehat{T_{ij}} \gets T_{ij}$
 		\State $bestProb \gets prob$
 		\EndIf
 		\EndFor
 		\EndFor
-		\State \Return $T_{best}$
+		\State \Return $\widehat{T_{ij}}$
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
 
 
 
-Algorithm~\ref{alg:rnm} shows the whole RNM approach. In line 2 scene points get subsampled with subsampling factor $R_{sub}$. \todo{subsampling now is based on a random approach with a probability; future work to make this more efficient} Next, in line~3, the so called control set is extracted from scene points. It is a subset of scene points and is used in the rating function to rate the transformations. \todo{better description here} In line~4 the normal vectors of scene points are calculated -- normals from model points got calculated in reconstruction step. In line~7 to~9 the random indexes get calculated as shown in figure~\ref{fig:span}. From line~10 to~17 the best transformation is searched with the rating function. The function $getTrans$ in line~11 implements equation~\ref{equ:tij} to determine the transformation between a model and a scene point. Finally in line~19 RNM returns the transformation with maximum rating as final estimation of the transformation between the two consecutive scans.
+Algorithm~\ref{alg:rnm} shows the whole RNM approach. In line 2 scene points get subsampled with subsampling factor $r_{sub}$. \todo{subsampling now is based on a random approach with a probability; future work to make this more efficient} Next, in line~3, the so called control set is extracted from scene points. It is a subset of scene points $\left(C \subset S\right)$ and is used in the rating function to rate the transformations. \todo{better description here} In line~4 the normal vectors of scene points are calculated -- normals from model points got calculated in reconstruction step. In line~7 to~9 the random indexes get calculated as shown in figure~\ref{fig:span}. From line~10 to~17 the best transformation is searched with the rating function. The function $getTrans$ in line~11 implements equation~\ref{equ:tij} to determine the transformation between a model and a scene point. Finally in line~19 RNM returns the transformation with maximum rating as final estimation of the transformation between the two consecutive scans.
 
 
 %%------------------
@@ -528,32 +530,32 @@ Algorithm~\ref{alg:rnm} shows the whole RNM approach. In line 2 scene points get
 %We transform the whole scans into 2D space so that the position and normals of two selected scan points match.\todo{evtl picture}
 %%------------------
 
-\subsection{Rating Function TSDPF}
+\subsection{Rating Function (TSDPF)}
+\label{sec:TSDPF}
 In many probabilistic approaches maximizing the so called measurement probability $p \left (  z|x,m \right )$ over $x$ helps to find the robots position\todo{ref maximizing meas prob}. While maximizing itself is done by RNM (see equation~\ref{equ:max}) only the to be maximized part $p \left (  z|x,m \right )$ is of interest for the rating function. 
 
-Whereas $x$ stands for the pose of the robot, $m$ represents the actual map and $z$ is the actual measurement, in this case the actual range measurements from the laser scanner. It is common to thread each scan ray statistically independent from each other and multiply the probabilities to get one scans measurement probability (see equation~\ref{equ:multProb}).
+The Pose of the robot is denoted as $x$, $m$ represents the actual map and $z$ is the actual measurement, in this case the actual range measurements from the laser scanner. It is common to consider each scan ray statistically independent from each other. So multiply all independent scan rays leads to a whole scans probability (see equation~\ref{equ:multProb}).
 
 \begin{equation}
 \label{equ:multProb}
 p \left (  z|x,m \right ) = \prod_k p \left ( z_k|x,m \right )
 \end{equation}
 
-Substituting variables and calculating one particular probability with given values leads to the rating function used by RNM algorithm:
+Substituting variables according to this application and calculating one particular probability with given values leads to the rating function used by RNM algorithm:
 
 \begin{align}
 \label{equ:ratingFunc}
-f_{rating} &\left (  T_{ij}, T_{t-1}, m_{TSD}, C, p_r\right ) = \\
-\prod_k p &\left ( z_k = C[k]|x = T_{t-1} \cdot T_{ij} ,m = m_{TSD} \right ) \nonumber.
+\prod_k p \left ( z_k = C[k]|x = T_{t-1} \cdot T_{ij} ,m = m_{TSD} \right ) \sim f_{rating}  (...)
 \end{align}
 
-The measurement $z$ is represented as the control set $C$, a subset from the scene point cloud $\left(C \subset S\right)$. The map $m$ is represented as TSDFs called $m_{TSD}$. Whereas the position $x$ is represented as a transformation matrix calculated with $T_{ij}$ from RNM-Algorithm and the last known transformation returned by SLAM algorithm, which is called $T_{t-1}$.
+The measurement $z$ is represented as the control set $C$. The map $m$ is represented as TSDFs called $m_{TSD}$. Whereas the position $x$ is represented as a transformation matrix calculated with $T_{ij}$ from RNM-Algorithm and the last known transformation returned by SLAM algorithm, which is called $T_{t-1}$.
 
 The key point of equation~\ref{equ:ratingFunc} is to find the probability for a scan ray to impinge at a given position in the map. For that a so called probability field (PF) \todo{ref for PF} can be used.
 
 
 DESCRIBE PF HERE? \todo{describe PF?} The probability field provides the likelihood for a single ray to impinge at a given Position in the map.
 
-Generating the PF online while SLAM costs computational recourses. Therefore the idea of the introduced rating function is to use the map in TSD representation as PF. This leads to the so called Truncated Signed Distance Probability Field (TSDPF). The information of distances to obstacles is included in TSD space and can be used for extracting the measurement probability. For each scan point the probability is calculated by looking up the TSD value at the points coordinates and transforming this value ad described by equation~\ref{equ:tsdpf}.
+Generating the PF online while SLAM costs computational recourses. Therefore the idea of the introduced rating function is to use the map in TSD representation as PF. This leads to the so called Truncated Signed Distance Probability Field (TSDPF). The information of distances to obstacles is included in TSD space and can be used for extracting a measurement probability. For each scan point the probability is calculated by looking up the TSD value at the points coordinates and transforming this value as described by equation~\ref{equ:tsdpf}.
 
 \begin{equation}
 \label{equ:tsdpf}
@@ -592,7 +594,7 @@ Algorithm~\ref{alg:rating} denotes the rating algorithm form RNM Function.
 		\ForAll{$C^*$}
 		\State $tsd \gets m_{TSD}(C^*[i])$ \Comment lookup TSD value
 		\State $tsdpf \gets tsdpf(tsd, p_r)$ \Comment transform to TSDPF
-		\State $rating = rating * tsdpf$ \Comment multiply all rays 
+		\State $rating = rating \cdot tsdpf$ \Comment multiply all rays 
 		\State $i \gets i+1$ \Comment increment
 		\EndFor		
 		\State \Return $rating$
